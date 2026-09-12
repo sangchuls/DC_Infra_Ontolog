@@ -1,0 +1,68 @@
+{
+  "project": {
+    "name": "동탄 데이터센터 (삼성SDS)",
+    "client": "삼성SDS",
+    "consultant": "",
+    "location": "경기 화성시 동탄",
+    "date": "2026-08-29",
+    "ver": "v0.1 (온톨로지 초안)"
+  },
+  "site": {
+    "addr": "경기도 화성시 동탄",
+    "pnu": "",
+    "area": "",
+    "lat": "",
+    "lng": "",
+    "bcr": "",
+    "far": "",
+    "gfa": "",
+    "floors": "",
+    "height": "",
+    "excav": "",
+    "cost": "",
+    "layout": "",
+    "arch": "",
+    "infra": "",
+    "note": "삼성SDS 동탄 데이터센터. West Wing 증설분으로 20MW 추가 전력 확보(2025.12). 대지·연면적·용도지역 추가조사 필요."
+  },
+  "survey": {
+    "usearea": "",
+    "jimok": "",
+    "district": "",
+    "aviation": "",
+    "edu": "",
+    "schooldist": "",
+    "soil": "조사필요",
+    "noise": "",
+    "flood": "",
+    "landslide": "",
+    "seismic": "",
+    "gasdist": "",
+    "road": "",
+    "grid": "수도권 전력 20MW 추가 확보(2025.12)",
+    "surround": "",
+    "opinion": "수도권 전력난 속 20MW 확보 성공. 대지·용도지역·인허가 현황은 추가조사(토지이음) 필요."
+  },
+  "system": {
+    "itload": "",
+    "racks": "",
+    "density": "",
+    "pue": "",
+    "tier": "",
+    "redun": "",
+    "cool": "",
+    "power": "20",
+    "server": "GPU 고밀도 서버 + 삼성 클라우드 플랫폼(SCP) 전용(West Wing)",
+    "netstor": "증설분 20MW 추가 수전 확보. 총 규모·Tier·냉각방식 추가조사."
+  },
+  "decisions": [
+    {
+      "category": "용량",
+      "item": "확보 전력",
+      "decision": "West Wing 증설 20MW 확보",
+      "status": "확정",
+      "date": "2025-12",
+      "note": "삼성SDS"
+    }
+  ]
+}

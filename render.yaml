@@ -1,0 +1,24 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# 대시보드에서 "New > Blueprint"로 이 레포를 연결하면 아래 설정으로 서비스가 만들어진다.
+# sync: false 로 표시된 값은 이 파일(=git)에 넣지 않고 Render 대시보드에서 직접 입력한다.
+
+services:
+  - type: web
+    name: dc-review-agent
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LLM_PROVIDER
+        value: anthropic
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.1-pro-preview
+      - key: GENERATOR_APP_URL
+        sync: false
+      - key: CHILLER_APP_URL
+        sync: false

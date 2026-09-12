@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>데이터센터 설계검토 에이전트</title>
+<style>
+  :root {
+    --bg: #f5f5f4; --panel: #ffffff; --border: #e2e2e0;
+    --text: #1c1c1a; --muted: #8a8a86; --accent: #1e40af;
+    --bubble-user: #1e40af; --bubble-user-text: #fff;
+    --bubble-bot: #f0efec; --bubble-bot-text: #1c1c1a;
+    --error: #b91c1c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column;
+  }
+  header {
+    padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--panel);
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  header h1 { font-size: 15px; font-weight: 700; margin: 0; }
+  header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  select {
+    font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--panel); color: var(--text);
+  }
+  #messages {
+    flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .msg { max-width: 78%; padding: 12px 16px; border-radius: 14px; white-space: pre-wrap; line-height: 1.55; font-size: 14px; }
+  .msg.user { align-self: flex-end; background: var(--bubble-user); color: var(--bubble-user-text); border-bottom-right-radius: 4px; }
+  .msg.bot { align-self: flex-start; background: var(--bubble-bot); color: var(--bubble-bot-text); border-bottom-left-radius: 4px; }
+  .msg.bot.error { background: #fee2e2; color: var(--error); }
+  .msg .meta { font-size: 10px; opacity: .55; margin-bottom: 4px; }
+  .msg.loading { align-self: flex-start; background: var(--bubble-bot); color: var(--muted); font-style: italic; }
+  .evidence { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .evidence a {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; background: #fff; color: var(--accent);
+    border: 1px solid var(--accent); text-decoration: none; white-space: nowrap;
+  }
+  .evidence a:hover { background: var(--accent); color: #fff; }
+  .evidence a::before { content: "📐"; }
+  form#composer {
+    display: flex; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border);
+    background: var(--panel); flex-shrink: 0;
+  }
+  textarea {
+    flex: 1; resize: none; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+    font-size: 14px; font-family: inherit; line-height: 1.4; height: 52px;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button {
+    border: none; background: var(--accent); color: #fff; border-radius: 10px; padding: 0 20px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: default; }
+  #empty-hint { color: var(--muted); font-size: 13px; text-align: center; margin-top: 40px; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>데이터센터 설계검토 에이전트</h1>
+      <div class="sub">설계 조건을 입력하면 tool 계산 결과에 근거한 검토의견서를 생성합니다</div>
+    </div>
+    <select id="provider"></select>
+  </header>
+
+  <div id="messages">
+    <div id="empty-hint">예: "가평 데이터센터 대안-1(100MW) 검토 내용을 요약하고, 발전기 Cummins 3500kW 17대 기준 급배기 개구면적을 계산해줘"</div>
+  </div>
+
+  <form id="composer">
+    <textarea id="input" placeholder="설계 조건을 입력하세요... (Shift+Enter 줄바꿈, Enter 전송)"></textarea>
+    <button type="submit" id="send-btn">전송</button>
+  </form>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  const inputEl = document.getElementById('input');
+  const formEl = document.getElementById('composer');
+  const sendBtn = document.getElementById('send-btn');
+  const providerEl = document.getElementById('provider');
+  const emptyHint = document.getElementById('empty-hint');
+
+  async function loadConfig() {
+    try {
+      const res = await fetch('/api/config');
+      const cfg = await res.json();
+      providerEl.innerHTML = '';
+      for (const p of cfg.providers) {
+        const opt = document.createElement('option');
+        opt.value = p;
+        opt.textContent = p === 'anthropic' ? 'Claude (Anthropic)' : p === 'gemini' ? 'Gemini (Google)' : p;
+        if (p === cfg.default_provider) opt.selected = true;
+        providerEl.appendChild(opt);
+      }
+    } catch (e) {
+      providerEl.innerHTML = '<option value="anthropic">Claude (Anthropic)</option><option value="gemini">Gemini (Google)</option>';
+    }
+  }
+
+  function addMessage(role, text, isError, evidence) {
+    emptyHint.remove();
+    const div = document.createElement('div');
+    div.className = 'msg ' + role + (isError ? ' error' : '');
+    div.textContent = text;
+
+    if (evidence && evidence.length) {
+      const box = document.createElement('div');
+      box.className = 'evidence';
+      for (const ev of evidence) {
+        const a = document.createElement('a');
+        a.href = ev.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = ev.label;
+        box.appendChild(a);
+      }
+      div.appendChild(box);
+    }
+
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  formEl.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = inputEl.value.trim();
+    if (!text) return;
+    addMessage('user', text);
+    inputEl.value = '';
+    sendBtn.disabled = true;
+
+    const loadingEl = document.createElement('div');
+    loadingEl.className = 'msg bot loading';
+    loadingEl.textContent = '검토의견서 작성 중...';
+    messagesEl.appendChild(loadingEl);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, provider: providerEl.value }),
+      });
+      const data = await res.json();
+      loadingEl.remove();
+      addMessage('bot', data.reply, data.error, data.evidence);
+    } catch (err) {
+      loadingEl.remove();
+      addMessage('bot', '[오류] 서버에 연결할 수 없습니다: ' + err.message, true);
+    } finally {
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  });
+
+  inputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      formEl.requestSubmit();
+    }
+  });
+
+  loadConfig();
+</script>
+</body>
+</html>

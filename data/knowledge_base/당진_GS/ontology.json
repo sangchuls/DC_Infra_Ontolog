@@ -1,0 +1,76 @@
+{
+  "project": {
+    "name": "당진 AI 데이터센터 (GS)",
+    "client": "GS EPS",
+    "consultant": "해안건축",
+    "location": "충남 당진 (GS EPS 당진발전소 일원)",
+    "date": "2026-08-29",
+    "ver": "v0.1 (온톨로지 초안)"
+  },
+  "site": {
+    "addr": "충청남도 당진시 (GS EPS 당진발전소 인근)",
+    "pnu": "",
+    "area": "",
+    "lat": "",
+    "lng": "",
+    "bcr": "",
+    "far": "",
+    "gfa": "",
+    "floors": "",
+    "height": "",
+    "excav": "",
+    "cost": "",
+    "layout": "",
+    "arch": "",
+    "infra": "",
+    "note": "GS의 GW급 AI 데이터센터 검토지. 2030년 준공 목표. 대지·연면적·용도지역 추가조사."
+  },
+  "survey": {
+    "usearea": "",
+    "jimok": "",
+    "district": "",
+    "aviation": "",
+    "edu": "",
+    "schooldist": "",
+    "soil": "조사필요",
+    "noise": "",
+    "flood": "",
+    "landslide": "",
+    "seismic": "",
+    "gasdist": "",
+    "road": "",
+    "grid": "GS EPS 당진발전소(2.4GW LNG 복합 + 210MW 바이오매스) 직결/병설 검토",
+    "surround": "",
+    "opinion": "발전소 병설형 대형 프로젝트. 1.2GW급으로 계통연계·용수·부지 규모 확인 필요. 용도지역·재해 추가조사."
+  },
+  "system": {
+    "itload": "",
+    "racks": "",
+    "density": "",
+    "pue": "",
+    "tier": "",
+    "redun": "",
+    "cool": "",
+    "power": "1200",
+    "server": "",
+    "netstor": "1.2GW(1,200MW)급 AI 데이터센터 검토. GS EPS 당진 LNG 복합화력(2.4GW) 병설(Behind-the-Meter)로 계통부담 최소화. 2030 준공 목표."
+  },
+  "decisions": [
+    {
+      "category": "전력",
+      "item": "전력공급 방식",
+      "decision": "GS EPS 당진발전소 병설(Behind-the-Meter) 검토",
+      "status": "검토중",
+      "date": "",
+      "note": "발전소 직결"
+    },
+    {
+      "category": "규모",
+      "item": "목표 용량",
+      "decision": "1.2GW급 AI 데이터센터",
+      "status": "검토중",
+      "date": "",
+      "note": "2030 준공 목표"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "project": {
+    "name": "SK AI 데이터센터 울산",
+    "client": "SK텔레콤 · SK브로드밴드 (+ AWS)",
+    "consultant": "SK에코플랜트 (시공)",
+    "location": "울산 미포 국가산업단지",
+    "date": "2026-08-29",
+    "ver": "v0.1 (온톨로지 초안)"
+  },
+  "site": {
+    "addr": "울산광역시 (미포 국가산업단지)",
+    "pnu": "",
+    "area": "",
+    "lat": "",
+    "lng": "",
+    "bcr": "",
+    "far": "",
+    "gfa": "",
+    "floors": "",
+    "height": "",
+    "excav": "",
+    "cost": "",
+    "layout": "",
+    "arch": "",
+    "infra": "",
+    "note": "SK·AWS 협력, 총 7조원 투자. 2025.8.29 기공식. 1단계 40MW(2027) → 103MW(2029) 완공. 장기 1GW급 확대(동북아 AI 허브) 계획."
+  },
+  "survey": {
+    "usearea": "일반공업지역 추정 (미포 국가산업단지) — 추가조사(토지이음)",
+    "jimok": "",
+    "district": "",
+    "aviation": "",
+    "edu": "",
+    "schooldist": "",
+    "soil": "조사필요",
+    "noise": "",
+    "flood": "",
+    "landslide": "",
+    "seismic": "",
+    "gasdist": "",
+    "road": "",
+    "grid": "비수도권 전력 확보, 국가산단 인프라",
+    "surround": "",
+    "opinion": "국가산업단지 입지로 용도상 방송통신시설 허용 여부·전력·용수 확인. GPU 6만장 고밀도로 냉각(액침/수랭 등) 방식 확정 필요. 단계별 개발(40→103MW→1GW)."
+  },
+  "system": {
+    "itload": "",
+    "racks": "",
+    "density": "",
+    "pue": "",
+    "tier": "",
+    "redun": "",
+    "cool": "",
+    "power": "103",
+    "server": "GPU 약 6만장 수용(국내 최대)",
+    "netstor": "AWS 협력 AI 전용. 1단계 40MW(2027)→103MW(2029). 장기 1GW 확대. 비수도권 최대."
+  },
+  "decisions": [
+    {
+      "category": "규모",
+      "item": "목표 용량",
+      "decision": "103MW (1단계 40MW 2027 → 103MW 2029), 장기 1GW",
+      "status": "확정",
+      "date": "2025-08-29",
+      "note": "기공식"
+    },
+    {
+      "category": "협력",
+      "item": "클라우드 파트너",
+      "decision": "AWS 협력, GPU 6만장",
+      "status": "확정",
+      "date": "",
+      "note": "7조원 투자"
+    }
+  ]
+}
