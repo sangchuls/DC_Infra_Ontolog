@@ -39,6 +39,7 @@ if os.path.isdir(CHILLER_APP_DIR):
 class ChatRequest(BaseModel):
     message: str
     provider: str = None
+    api_key: str = None  # BYOK: 지정하면 서버 환경변수 대신 이 키를 사용 (브라우저 localStorage에서만 옴, 서버엔 저장 안 함)
 
 
 class EvidenceItem(BaseModel):
@@ -68,7 +69,8 @@ def get_config():
 def chat(req: ChatRequest):
     provider = (req.provider or DEFAULT_PROVIDER).lower()
     try:
-        reply, tool_calls = generate_review(req.message, provider=provider)
+        kwargs = {"api_key": req.api_key} if req.api_key else {}
+        reply, tool_calls = generate_review(req.message, provider=provider, **kwargs)
         evidence = build_evidence(tool_calls)
         return ChatResponse(reply=reply, provider=provider, error=False, evidence=evidence)
     except Exception as e:

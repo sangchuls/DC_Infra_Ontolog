@@ -27,6 +27,27 @@
     font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
     background: var(--panel); color: var(--text);
   }
+  .header-controls { display: flex; align-items: center; gap: 8px; position: relative; }
+  #settings-btn {
+    background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 10px; font-size: 13px; font-weight: 400; cursor: pointer;
+  }
+  #settings-btn:hover { background: var(--bg); }
+  #settings-panel {
+    position: absolute; top: 40px; right: 0; width: 300px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    z-index: 10; display: flex; flex-direction: column; gap: 10px;
+  }
+  #settings-panel h3 { margin: 0 0 2px; font-size: 13px; }
+  #settings-panel .hint { font-size: 11px; color: var(--muted); margin: 0 0 6px; line-height: 1.5; }
+  #settings-panel label { font-size: 12px; color: var(--muted); }
+  #settings-panel input {
+    width: 100%; font-size: 13px; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border);
+    margin-top: 3px; font-family: monospace;
+  }
+  #settings-panel .save-row { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  #settings-save { padding: 6px 16px; font-size: 13px; }
+  #settings-saved-msg { font-size: 11px; color: #15803d; display: none; }
   #messages {
     flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px;
   }
@@ -67,7 +88,27 @@
       <h1>데이터센터 설계검토 에이전트</h1>
       <div class="sub">설계 조건을 입력하면 tool 계산 결과에 근거한 검토의견서를 생성합니다</div>
     </div>
-    <select id="provider"></select>
+    <div class="header-controls">
+      <select id="provider"></select>
+      <button type="button" id="settings-btn">⚙ 내 API 키</button>
+      <div id="settings-panel" hidden>
+        <h3>내 API 키 (이 브라우저에만 저장)</h3>
+        <p class="hint">여기 입력한 키는 서버에 저장되지 않고 이 브라우저의 localStorage에만 남습니다.
+          비워두면 서버에 설정된 기본 키를 사용합니다.</p>
+        <div>
+          <label for="key-anthropic">Anthropic (Claude) API 키</label>
+          <input type="password" id="key-anthropic" placeholder="sk-ant-..." autocomplete="off" />
+        </div>
+        <div>
+          <label for="key-gemini">Gemini API 키</label>
+          <input type="password" id="key-gemini" placeholder="AIza..." autocomplete="off" />
+        </div>
+        <div class="save-row">
+          <span id="settings-saved-msg">저장됨</span>
+          <button type="button" id="settings-save">저장</button>
+        </div>
+      </div>
+    </div>
   </header>
 
   <div id="messages">
@@ -86,6 +127,52 @@
   const sendBtn = document.getElementById('send-btn');
   const providerEl = document.getElementById('provider');
   const emptyHint = document.getElementById('empty-hint');
+
+  // ── 내 API 키 (BYOK) — 이 브라우저의 localStorage에만 저장, 서버 DB엔 안 남음 ──
+  const LS_KEY = { anthropic: 'dc_review_key_anthropic', gemini: 'dc_review_key_gemini' };
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsPanel = document.getElementById('settings-panel');
+  const keyAnthropicEl = document.getElementById('key-anthropic');
+  const keyGeminiEl = document.getElementById('key-gemini');
+  const settingsSaveBtn = document.getElementById('settings-save');
+  const settingsSavedMsg = document.getElementById('settings-saved-msg');
+
+  function loadStoredKeys() {
+    try {
+      keyAnthropicEl.value = localStorage.getItem(LS_KEY.anthropic) || '';
+      keyGeminiEl.value = localStorage.getItem(LS_KEY.gemini) || '';
+    } catch (e) { /* localStorage 접근 불가 시(프라이빗 모드 등) 그냥 빈 채로 둠 */ }
+  }
+
+  function currentApiKey() {
+    try {
+      const k = LS_KEY[providerEl.value];
+      const v = k && localStorage.getItem(k);
+      return v ? v.trim() : '';
+    } catch (e) { return ''; }
+  }
+
+  settingsBtn.addEventListener('click', () => {
+    settingsPanel.hidden = !settingsPanel.hidden;
+    settingsSavedMsg.style.display = 'none';
+  });
+  document.addEventListener('click', (e) => {
+    if (!settingsPanel.hidden && !settingsPanel.contains(e.target) && e.target !== settingsBtn) {
+      settingsPanel.hidden = true;
+    }
+  });
+  settingsSaveBtn.addEventListener('click', () => {
+    try {
+      const a = keyAnthropicEl.value.trim(), g = keyGeminiEl.value.trim();
+      if (a) localStorage.setItem(LS_KEY.anthropic, a); else localStorage.removeItem(LS_KEY.anthropic);
+      if (g) localStorage.setItem(LS_KEY.gemini, g); else localStorage.removeItem(LS_KEY.gemini);
+      settingsSavedMsg.style.display = 'inline';
+      setTimeout(() => { settingsSavedMsg.style.display = 'none'; }, 1500);
+    } catch (e) {
+      alert('저장 실패: 브라우저 저장소를 쓸 수 없습니다 (' + e.message + ')');
+    }
+  });
+  loadStoredKeys();
 
   async function loadConfig() {
     try {
@@ -144,10 +231,11 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
     try {
+      const apiKey = currentApiKey();
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, provider: providerEl.value }),
+        body: JSON.stringify({ message: text, provider: providerEl.value, api_key: apiKey || undefined }),
       });
       const data = await res.json();
       loadingEl.remove();

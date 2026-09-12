@@ -9,9 +9,13 @@ from agent.tools import ALL_AGENT_TOOLS
 DEFAULT_MODEL = "claude-opus-5"
 
 
-def generate_review(user_query: str, model: str = DEFAULT_MODEL, max_tokens: int = 16000):
-    """검토의견서 텍스트와, 실행된 tool 호출 내역([{tool, input}, ...])을 함께 반환한다."""
-    client = anthropic.Anthropic()
+def generate_review(user_query: str, model: str = DEFAULT_MODEL, max_tokens: int = 16000, api_key: str = None):
+    """검토의견서 텍스트와, 실행된 tool 호출 내역([{tool, input}, ...])을 함께 반환한다.
+
+    api_key: 지정하면 ANTHROPIC_API_KEY 환경변수 대신 이 키로 클라이언트를 만든다
+             (브라우저에서 사용자가 직접 입력한 키를 쓸 때 — BYOK).
+    """
+    client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
 
     runner = client.beta.messages.tool_runner(
         model=model,
