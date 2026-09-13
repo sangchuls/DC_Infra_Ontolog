@@ -124,6 +124,11 @@
   </form>
 
 <script>
+  // 백엔드(Render) 주소. 이 파일이 백엔드 자신에게서 서빙될 때는 상대경로('')를 쓰고,
+  // Vercel 등 다른 도메인에서 서빙될 때는 이 절대 URL로 API를 호출한다 — 파일 하나로 양쪽 다 커버.
+  const RENDER_BACKEND = 'https://dc-infra-ontolog.onrender.com';
+  const API_BASE = location.hostname.endsWith('onrender.com') ? '' : RENDER_BACKEND;
+
   const messagesEl = document.getElementById('messages');
   const inputEl = document.getElementById('input');
   const formEl = document.getElementById('composer');
@@ -179,7 +184,7 @@
 
   async function loadConfig() {
     try {
-      const res = await fetch('/api/config');
+      const res = await fetch(API_BASE + '/api/config');
       const cfg = await res.json();
       providerEl.innerHTML = '';
       for (const p of cfg.providers) {
@@ -235,7 +240,7 @@
 
     try {
       const apiKey = currentApiKey();
-      const res = await fetch('/api/chat', {
+      const res = await fetch(API_BASE + '/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, provider: providerEl.value, api_key: apiKey || undefined }),

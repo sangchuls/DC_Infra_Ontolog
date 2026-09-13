@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from typing import List, Optional
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -23,6 +24,16 @@ from agent.orchestrator import generate_review, PROVIDERS, DEFAULT_PROVIDER
 from agent.evidence import build_evidence
 
 app = FastAPI(title="데이터센터 설계검토 에이전트")
+
+# Vercel에 별도 배포된 프론트엔드(static/index.html)가 이 도메인으로 /api/* 를 호출할 수 있게 허용.
+# FRONTEND_ORIGIN을 실제 Vercel 도메인으로 지정하면 그 출처만 허용, 미지정시 전체 허용(*)한다.
+_frontend_origin = os.environ.get("FRONTEND_ORIGIN")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[_frontend_origin] if _frontend_origin else ["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
 
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
