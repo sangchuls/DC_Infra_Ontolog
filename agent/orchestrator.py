@@ -1,15 +1,16 @@
 # agent/orchestrator.py
-# "복제 인격" 에이전트 진입점 — Anthropic(Claude) / Gemini 중 선택 가능.
+# "복제 인격" 에이전트 진입점 — Anthropic(Claude) / Gemini / OpenAI(GPT) 중 선택 가능.
 #
 # 실행 전제: 선택한 프로바이더의 API 키가 환경변수로 설정되어 있어야 한다.
 #   Anthropic: ANTHROPIC_API_KEY (또는 `ant auth login` 프로필)
 #   Gemini:    GEMINI_API_KEY 또는 GOOGLE_API_KEY
+#   OpenAI:    OPENAI_API_KEY
 # 이 모듈은 키를 직접 다루지 않으며, 각 provider 모듈이 환경변수에서 읽는다.
 
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-PROVIDERS = ("anthropic", "gemini")
+PROVIDERS = ("anthropic", "gemini", "openai")
 DEFAULT_PROVIDER = os.environ.get("LLM_PROVIDER", "anthropic")
 
 
@@ -17,7 +18,7 @@ def generate_review(user_query: str, provider: str = None, **kwargs):
     """사용자 질의(설계 조건)를 받아 (검토의견서 텍스트, tool 호출 내역) 튜플을 반환한다.
     tool 호출 내역은 agent.evidence.build_evidence로 계산 앱 화면 링크로 변환할 수 있다.
 
-    provider: 'anthropic' | 'gemini'. 미지정시 LLM_PROVIDER 환경변수, 그것도 없으면 'anthropic'.
+    provider: 'anthropic' | 'gemini' | 'openai'. 미지정시 LLM_PROVIDER 환경변수, 그것도 없으면 'anthropic'.
     """
     provider = (provider or DEFAULT_PROVIDER).lower()
     if provider not in PROVIDERS:
@@ -25,6 +26,8 @@ def generate_review(user_query: str, provider: str = None, **kwargs):
 
     if provider == "anthropic":
         from agent.providers.anthropic_provider import generate_review as _run
+    elif provider == "openai":
+        from agent.providers.openai_provider import generate_review as _run
     else:
         from agent.providers.gemini_provider import generate_review as _run
 

@@ -20,6 +20,10 @@ services:
         sync: false
       - key: GEMINI_MODEL
         value: gemini-3.1-pro-preview
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-6-astra
       - key: GENERATOR_APP_URL
         sync: false
       - key: CHILLER_APP_URL

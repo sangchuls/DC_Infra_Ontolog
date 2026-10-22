@@ -31,6 +31,25 @@ if __name__ == "__main__":
     except ValueError:
         print("\n[OK] 알 수 없는 provider 거부 확인")
 
+    # OpenAI provider: 실제 API 호출 없이 tool 정의 생성·실행·키 누락 에러만 검증
+    from agent.providers import openai_provider as op
+    defs = op._tool_definitions()
+    assert len(defs) == len(ALL_AGENT_TOOLS)
+    for d in defs:
+        assert d["type"] == "function" and d["name"] and d["parameters"]["type"] == "object", d
+    gen = op._run_tool("calc_generator_room_openings", {"manufacturer": "cummins", "kw": 3500})
+    assert '"OA_total_m2"' in gen, gen
+    assert "error" in op._run_tool("no_such_tool", {})
+    saved_key = os.environ.pop("OPENAI_API_KEY", None)
+    try:
+        op.generate_review("test")
+        raise AssertionError("OPENAI_API_KEY 없이 에러가 나지 않음")
+    except RuntimeError:
+        print(f"\n[OK] OpenAI tool 정의 {len(defs)}개 / tool 실행 / 키 누락 에러 확인")
+    finally:
+        if saved_key is not None:
+            os.environ["OPENAI_API_KEY"] = saved_key
+
     projects = list_projects()
     print(f"\n[OK] 지식베이스 프로젝트 {len(projects)}개:")
     for p in projects:

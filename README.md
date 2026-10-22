@@ -21,7 +21,7 @@ tools/                LangChain @tool 래퍼 (engine/ 함수를 그대로 호출
   chiller_tools.py         CHILLER_TOOLS (3개)
   __init__.py               ALL_TOOLS = 위 3개 합친 리스트
 
-agent/                "복제 인격" — Claude/Gemini 중 선택 가능한 검토의견서 생성 에이전트 (Step 4)
+agent/                "복제 인격" — Claude/Gemini/GPT 중 선택 가능한 검토의견서 생성 에이전트 (Step 4)
   system_prompt.py       페르소나. 검토의견서.pdf(김상범 소장 작성본)의 4단 구조·문체를 그대로 인코딩
   knowledge_base.py        프로젝트 온톨로지 파일기반 지식베이스. data/knowledge_base/<프로젝트명>/ 폴더를
                               스캔한다 (ontology.json 필수, description.md 선택) — 새 프로젝트는 폴더만 추가하면 됨
@@ -32,7 +32,8 @@ agent/                "복제 인격" — Claude/Gemini 중 선택 가능한 검
   providers/
     anthropic_provider.py     client.beta.messages.tool_runner 기반 구현
     gemini_provider.py         client.models.generate_content + 자동 함수호출 기반 구현
-  orchestrator.py            진입점(디스패처). generate_review(query, provider="anthropic"|"gemini")
+    openai_provider.py         Responses API + 수동 function_call 루프 (tool 스키마는 tools.py의 @beta_tool 정의 재사용)
+  orchestrator.py            진입점(디스패처). generate_review(query, provider="anthropic"|"gemini"|"openai")
                               CLI: python -m agent.orchestrator (실행 시 provider 선택 프롬프트)
 
 tests/
@@ -59,7 +60,9 @@ Anthropic/Gemini 중 고른다. 각 provider 모듈이 자체적으로 키를 �
 
 - Anthropic: `ANTHROPIC_API_KEY` (또는 `ant auth login` 프로필) — 발급 https://console.anthropic.com/settings/keys
 - Gemini: `GEMINI_API_KEY` 또는 `GOOGLE_API_KEY` — 발급 https://aistudio.google.com/apikey
-  (모델 ID는 `GEMINI_MODEL`로 재정의 가능, 기본값 `gemini-3.1-pro-preview`)
+  (모델 ID는 `GEMINI_MODEL`로 재정의 가능, 기본값 `gemini-3.1-pro-preview` — 무료 티어에서는 Pro 모델이 막혀 있어 `gemini-3.8-flash` 등을 써야 함)
+- OpenAI: `OPENAI_API_KEY` — 발급 https://platform.openai.com/api-keys
+  (모델 ID는 `OPENAI_MODEL`로 재정의 가능, 기본값 `gpt-6-astra`. 실제 키로 tool 호출 루프는 아직 검증 전)
 
 키/프로바이더 선택 예시는 `.env.example` 참고 (플레이스홀더만 있음, 실제 값은 `.env`에). **주의**: `generate_review()`
 호출은 실제 과금이 발생한다.

@@ -106,6 +106,10 @@
           <label for="key-gemini">Gemini API 키</label>
           <input type="password" id="key-gemini" placeholder="AIza..." autocomplete="off" />
         </div>
+        <div>
+          <label for="key-openai">OpenAI (GPT) API 키</label>
+          <input type="password" id="key-openai" placeholder="sk-..." autocomplete="off" />
+        </div>
         <div class="save-row">
           <span id="settings-saved-msg">저장됨</span>
           <button type="button" id="settings-save">저장</button>
@@ -127,7 +131,10 @@
   // 백엔드(Render) 주소. 이 파일이 백엔드 자신에게서 서빙될 때는 상대경로('')를 쓰고,
   // Vercel 등 다른 도메인에서 서빙될 때는 이 절대 URL로 API를 호출한다 — 파일 하나로 양쪽 다 커버.
   const RENDER_BACKEND = 'https://dc-infra-ontolog.onrender.com';
-  const API_BASE = location.hostname.endsWith('onrender.com') ? '' : RENDER_BACKEND;
+  // localhost에서 열면 로컬 서버(같은 출처)를 쓴다 — 개발 중에 배포된 백엔드를 건드리지 않도록.
+  const SAME_ORIGIN_BACKEND = location.hostname.endsWith('onrender.com') ||
+    location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  const API_BASE = SAME_ORIGIN_BACKEND ? '' : RENDER_BACKEND;
 
   const messagesEl = document.getElementById('messages');
   const inputEl = document.getElementById('input');
@@ -137,11 +144,13 @@
   const emptyHint = document.getElementById('empty-hint');
 
   // ── 내 API 키 (BYOK) — 이 브라우저의 localStorage에만 저장, 서버 DB엔 안 남음 ──
-  const LS_KEY = { anthropic: 'dc_review_key_anthropic', gemini: 'dc_review_key_gemini' };
+  const LS_KEY = { anthropic: 'dc_review_key_anthropic', gemini: 'dc_review_key_gemini', openai: 'dc_review_key_openai' };
+  const PROVIDER_LABEL = { anthropic: 'Claude (Anthropic)', gemini: 'Gemini (Google)', openai: 'GPT (OpenAI)' };
   const settingsBtn = document.getElementById('settings-btn');
   const settingsPanel = document.getElementById('settings-panel');
   const keyAnthropicEl = document.getElementById('key-anthropic');
   const keyGeminiEl = document.getElementById('key-gemini');
+  const keyOpenaiEl = document.getElementById('key-openai');
   const settingsSaveBtn = document.getElementById('settings-save');
   const settingsSavedMsg = document.getElementById('settings-saved-msg');
 
@@ -149,6 +158,7 @@
     try {
       keyAnthropicEl.value = localStorage.getItem(LS_KEY.anthropic) || '';
       keyGeminiEl.value = localStorage.getItem(LS_KEY.gemini) || '';
+      keyOpenaiEl.value = localStorage.getItem(LS_KEY.openai) || '';
     } catch (e) { /* localStorage 접근 불가 시(프라이빗 모드 등) 그냥 빈 채로 둠 */ }
   }
 
@@ -171,9 +181,10 @@
   });
   settingsSaveBtn.addEventListener('click', () => {
     try {
-      const a = keyAnthropicEl.value.trim(), g = keyGeminiEl.value.trim();
+      const a = keyAnthropicEl.value.trim(), g = keyGeminiEl.value.trim(), o = keyOpenaiEl.value.trim();
       if (a) localStorage.setItem(LS_KEY.anthropic, a); else localStorage.removeItem(LS_KEY.anthropic);
       if (g) localStorage.setItem(LS_KEY.gemini, g); else localStorage.removeItem(LS_KEY.gemini);
+      if (o) localStorage.setItem(LS_KEY.openai, o); else localStorage.removeItem(LS_KEY.openai);
       settingsSavedMsg.style.display = 'inline';
       setTimeout(() => { settingsSavedMsg.style.display = 'none'; }, 1500);
     } catch (e) {
@@ -190,12 +201,12 @@
       for (const p of cfg.providers) {
         const opt = document.createElement('option');
         opt.value = p;
-        opt.textContent = p === 'anthropic' ? 'Claude (Anthropic)' : p === 'gemini' ? 'Gemini (Google)' : p;
+        opt.textContent = PROVIDER_LABEL[p] || p;
         if (p === cfg.default_provider) opt.selected = true;
         providerEl.appendChild(opt);
       }
     } catch (e) {
-      providerEl.innerHTML = '<option value="anthropic">Claude (Anthropic)</option><option value="gemini">Gemini (Google)</option>';
+      providerEl.innerHTML = Object.entries(PROVIDER_LABEL).map(([v, l]) => `<option value="${v}">${l}</option>`).join('');
     }
   }
 
